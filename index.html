@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>TML Parking — Chauffeur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0F0F13;--surface:#1A1A22;--surface2:#22222E;--border:#2E2E3E;--accent:#7B6EF6;--green:#22C55E;--green-bg:#0D2818;--amber:#F59E0B;--amber-bg:#281A05;--red:#EF4444;--red-bg:#2A0D0D;--text:#F0F0F8;--text2:#9090A8;--text3:#5A5A70;--radius:14px;--radius-sm:8px}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{min-height:100vh;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text)}
+  .app{min-height:100vh;display:flex;flex-direction:column;max-width:440px;margin:0 auto;padding:0 16px 32px}
+  .header{padding:24px 0 20px;display:flex;align-items:center;gap:12px}
+  .header-icon{width:40px;height:40px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .header h1{font-size:16px;font-weight:600;line-height:1.2}
+  .header p{font-size:12px;color:var(--text2);margin-top:2px}
+  .screen{display:none;flex-direction:column;gap:16px;animation:fadeIn .2s ease}
+  .screen.active{display:flex}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+  .card-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+  .spot-badge{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:8px 14px}
+  .spot-badge-num{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:var(--accent)}
+  .spot-badge-label{font-size:13px;color:var(--text2)}
+  .status-libre{background:var(--green-bg);color:var(--green);border:1px solid rgba(34,197,94,.2);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500}
+  .status-occupe{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:13px;font-weight:500;color:var(--text2)}
+  .field select,.field input,.field textarea{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;padding:12px 14px;width:100%;outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none}
+  .field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239090A8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+  .field select:focus,.field input:focus,.field textarea:focus{border-color:var(--accent)}
+  .field select option{background:var(--surface2)}
+  .field textarea{resize:none;line-height:1.5;min-height:80px}
+  .opt-label{font-size:11px;color:var(--text3)}
+  .info-box{background:var(--surface2);border-radius:var(--radius-sm);padding:12px}
+  .info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid var(--border)}
+  .info-row:last-child{border-bottom:none;padding-bottom:0}
+  .info-key{font-size:12px;color:var(--text3);flex-shrink:0;margin-right:12px}
+  .info-val{font-size:13px;font-weight:500;color:var(--text);text-align:right;font-family:'DM Mono',monospace}
+  .btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s}
+  .btn:active{transform:scale(.98);opacity:.9}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-danger{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+  .btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+  .spot-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .spot-btn{aspect-ratio:1;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center}
+  .spot-btn:active{transform:scale(.95)}
+  .spot-btn.libre{border-color:rgba(34,197,94,.3)}
+  .spot-btn.occupe{background:var(--red-bg);border-color:rgba(239,68,68,.3);color:var(--red)}
+  .spinner-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:40px 0}
+  .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-icon">🚛</div>
+    <div><h1>TML Parking</h1><p>Gestion des remorques</p></div>
+  </div>
+
+  <div id="screen-spot" class="screen active">
+    <div class="card">
+      <div class="card-label">Sélectionner un emplacement</div>
+      <div class="spot-grid" id="spot-grid"></div>
+    </div>
+  </div>
+
+  <div id="screen-depot" class="screen">
+    <div class="card">
+      <div class="card-label">Dépôt — emplacement</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="spot-badge"><span class="spot-badge-num" id="depot-spot-num">—</span><span class="spot-badge-label">Emplacement</span></div>
+        <span class="status-libre">Libre</span>
+      </div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:14px">
+      <div class="field">
+        <label>Département</label>
+        <select id="depot-dept">
+          <option value="">— Sélectionner —</option>
+          <option value="Aldi">Aldi</option>
+          <option value="Bureau">Bureau</option>
+          <option value="Chaussea">Chaussea</option>
+          <option value="Crossdock">Crossdock</option>
+          <option value="NCG">NCG</option>
+          <option value="Nike">Nike</option>
+          <option value="Retour">Retour</option>
+          <option value="Fleet">Fleet</option>
+          <option value="Autre">Autre</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>N° remorque / plaque</label>
+        <input type="text" id="depot-trailer" placeholder="ex: TML4043" autocomplete="off">
+      </div>
+      <div class="field">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <label>N° voyage</label><span class="opt-label">optionnel</span>
+        </div>
+        <input type="text" id="depot-voyage" placeholder="ex: V-2847" autocomplete="off">
+      </div>
+      <div class="field">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <label>Commentaire</label><span class="opt-label">optionnel</span>
+        </div>
+        <textarea id="depot-comment" placeholder="ex: frigo, accès prioritaire…"></textarea>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="submitDepot()">Valider le dépôt</button>
+    <button class="btn btn-ghost" onclick="goSpot()">Annuler</button>
+  </div>
+
+  <div id="screen-retrait" class="screen">
+    <div class="card">
+      <div class="card-label">Retrait — emplacement</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="spot-badge"><span class="spot-badge-num" id="retrait-spot-num">—</span><span class="spot-badge-label">Emplacement</span></div>
+        <span class="status-occupe">Occupé</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Remorque présente</div>
+      <div class="info-box" id="retrait-info"></div>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label>Commentaire retrait</label>
+        <textarea id="retrait-comment" placeholder="ex: récupéré par transporteur X…"></textarea>
+      </div>
+    </div>
+    <button class="btn btn-danger" onclick="submitRetrait()">Confirmer le retrait</button>
+    <button class="btn btn-ghost" onclick="goSpot()">Annuler</button>
+  </div>
+
+  <div id="screen-loading" class="screen">
+    <div class="spinner-wrap">
+      <div class="spinner"></div>
+      <p style="font-size:14px;color:var(--text2)">Enregistrement en cours…</p>
+    </div>
+  </div>
+
+  <div id="screen-success" class="screen">
+    <div class="card" style="text-align:center;padding:32px 16px">
+      <div id="suc-icon" style="width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px"></div>
+      <p style="font-size:18px;font-weight:600;margin-bottom:6px" id="suc-title">—</p>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:24px" id="suc-sub">—</p>
+      <div class="info-box" id="suc-details" style="text-align:left;margin-bottom:20px"></div>
+      <button class="btn btn-primary" onclick="goSpot()">Nouvel enregistrement</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwLbD-iQ0Vt2shPlKpOXwgjn1Et7oPPW4ZygmNq3RJlPOlzpC2La8RkLcySzNYy3s4PzA/exec";
+
+let parkingState = {};
+let currentSpot  = null;
+
+async function init() {
+  showScreen('loading');
+  await loadParkingState();
+  renderGrid();
+  showScreen('spot');
+}
+
+async function loadParkingState() {
+  try {
+    const res = await fetch("https://docs.google.com/spreadsheets/d/1I3kIkRRl17lhSNrrZq0eUL51gJlWhdJTWsPB6NRI5QM/export?format=csv&gid=0&t=" + Date.now());
+    const csv = await res.text();
+    const lines = csv.trim().split('\n').slice(1); // skip header
+    parkingState = {};
+    lines.forEach(line => {
+      const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+      const action = cols[0];
+      const n = Number(cols[1]);
+      if (!n || !action) return;
+      if (action === 'depot') {
+        parkingState[n] = {
+          dept: cols[2], trailer: cols[3],
+          voyage: cols[4], date: cols[5],
+          time: cols[6], statut: cols[7], comment: cols[8]
+        };
+      } else if (action === 'retrait') {
+        delete parkingState[n];
+      }
+    });
+  } catch(e) {
+    parkingState = {};
+  }
+}
+
+function renderGrid() {
+  const grid = document.getElementById('spot-grid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= 25; i++) {
+    const occ = parkingState[i];
+    const btn = document.createElement('button');
+    btn.className = 'spot-btn ' + (occ ? 'occupe' : 'libre');
+    btn.textContent = i;
+    btn.onclick = () => selectSpot(i);
+    grid.appendChild(btn);
+  }
+}
+
+function selectSpot(n) {
+  currentSpot = n;
+  if (parkingState[n]) {
+    const d = parkingState[n];
+    document.getElementById('retrait-spot-num').textContent = n;
+    document.getElementById('retrait-info').innerHTML = `
+      <div class="info-row"><span class="info-key">Remorque</span><span class="info-val">${d.trailer}</span></div>
+      <div class="info-row"><span class="info-key">Département</span><span class="info-val">${d.dept}</span></div>
+      <div class="info-row"><span class="info-key">Arrivée</span><span class="info-val">${d.date} ${d.time}</span></div>
+      ${d.voyage?`<div class="info-row"><span class="info-key">N° voyage</span><span class="info-val">${d.voyage}</span></div>`:''}
+      ${d.comment?`<div class="info-row"><span class="info-key">Commentaire</span><span class="info-val">${d.comment}</span></div>`:''}`;
+    document.getElementById('retrait-comment').value = '';
+    showScreen('retrait');
+  } else {
+    document.getElementById('depot-spot-num').textContent = n;
+    document.getElementById('depot-dept').value = '';
+    document.getElementById('depot-trailer').value = '';
+    document.getElementById('depot-voyage').value = '';
+    document.getElementById('depot-comment').value = '';
+    showScreen('depot');
+  }
+}
+
+function goSpot() { renderGrid(); showScreen('spot'); }
+
+function sendData(params) {
+  const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = img.onerror = () => resolve();
+    img.src = url + '&t=' + Date.now();
+    // Timeout de sécurité 8 secondes
+    setTimeout(resolve, 8000);
+  });
+}
+
+async function submitDepot() {
+  const dept    = document.getElementById('depot-dept').value;
+  const trailer = document.getElementById('depot-trailer').value.trim();
+  if (!dept || !trailer) { alert('Merci de renseigner le département et le numéro de remorque.'); return; }
+  const voyage  = document.getElementById('depot-voyage').value.trim();
+  const comment = document.getElementById('depot-comment').value.trim();
+  const now     = new Date();
+  const time    = now.toLocaleTimeString('fr-BE', {hour:'2-digit', minute:'2-digit'});
+  const date    = now.toLocaleDateString('fr-BE', {day:'2-digit', month:'2-digit', year:'numeric'});
+  const statut  = dept === 'Fleet' ? 'Bloquée' : 'Occupé';
+
+  showScreen('loading');
+
+  // Vérifier que l'emplacement est toujours libre avant d'enregistrer
+  await loadParkingState();
+  if (parkingState[currentSpot]) {
+    // Emplacement pris entre-temps par quelqu'un d'autre
+    renderGrid();
+    showScreen('spot');
+    alert('⚠️ Emplacement ' + currentSpot + ' vient d\'être pris par quelqu\'un d\'autre. Merci de choisir un autre emplacement.');
+    return;
+  }
+
+  await sendData({ action:'depot', emplacement:currentSpot, departement:dept, remorque:trailer, voyage, commentaire:comment, statut, date, heure:time });
+
+  parkingState[currentSpot] = { dept, trailer, voyage, comment, time, date, statut };
+  showSuccess('depot', { spot:currentSpot, dept, trailer, voyage, time, statut, comment });
+}
+
+async function submitRetrait() {
+  const occ     = parkingState[currentSpot];
+  const comment = document.getElementById('retrait-comment').value.trim();
+  const now     = new Date();
+  const time    = now.toLocaleTimeString('fr-BE', {hour:'2-digit', minute:'2-digit'});
+  const date    = now.toLocaleDateString('fr-BE', {day:'2-digit', month:'2-digit', year:'numeric'});
+
+  showScreen('loading');
+
+  await sendData({ action:'retrait', emplacement:currentSpot, departement:occ.dept, remorque:occ.trailer, voyage:occ.voyage||'', commentaire:comment, statut:'Retrait', date, heure:time });
+
+  delete parkingState[currentSpot];
+  showSuccess('retrait', { spot:currentSpot, trailer:occ.trailer, dept:occ.dept, time, comment });
+}
+
+function showSuccess(type, data) {
+  const isRetrait = type === 'retrait';
+  const icon = document.getElementById('suc-icon');
+  icon.style.background = isRetrait ? 'var(--red-bg)' : 'var(--green-bg)';
+  icon.style.border = isRetrait ? '1px solid rgba(239,68,68,.3)' : '1px solid rgba(34,197,94,.3)';
+  icon.textContent = '✓';
+  document.getElementById('suc-title').textContent = isRetrait ? 'Emplacement libéré' : 'Remorque enregistrée';
+  document.getElementById('suc-sub').textContent   = isRetrait ? 'Le dashboard a été mis à jour.' : 'Les équipes ont été notifiées.';
+  let rows = `
+    <div class="info-row"><span class="info-key">Emplacement</span><span class="info-val">${data.spot}</span></div>
+    <div class="info-row"><span class="info-key">Remorque</span><span class="info-val">${data.trailer}</span></div>
+    <div class="info-row"><span class="info-key">Département</span><span class="info-val">${data.dept}</span></div>
+    <div class="info-row"><span class="info-key">Heure</span><span class="info-val">${data.time}</span></div>`;
+  if (!isRetrait && data.statut) rows += `<div class="info-row"><span class="info-key">Statut</span><span class="info-val">${data.statut}</span></div>`;
+  if (data.voyage) rows += `<div class="info-row"><span class="info-key">N° voyage</span><span class="info-val">${data.voyage}</span></div>`;
+  if (data.comment) rows += `<div class="info-row"><span class="info-key">Commentaire</span><span class="info-val">${data.comment}</span></div>`;
+  document.getElementById('suc-details').innerHTML = rows;
+  showScreen('success');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+init();
+
+// Auto-refresh état parking toutes les 30 secondes — lectures CSV illimitées
+setInterval(() => {
+  loadParkingState().then(() => renderGrid());
+}, 3000);
+</script>
+</body>
+</html>
