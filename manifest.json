@@ -8,25 +8,33 @@
   "background_color": "#0F0F13",
   "theme_color": "#0F0F13",
   "orientation": "portrait",
+  "form_factor": "narrow",
   "icons": [
+    {
+      "src": "/parking-tml/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/parking-tml/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/parking-tml/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
     {
       "name": "Dashboard",
       "url": "/parking-tml/dashboard.html",
-      "description": "Vue temps réel du parking"
+      "description": "Vue temps réel du parking",
+      "icons": [{"src": "/parking-tml/icon-96.png", "sizes": "96x96"}]
     }
   ]
 }
