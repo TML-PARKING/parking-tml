@@ -67,7 +67,7 @@
       <div class="header-icon">🚛</div>
       <div><h1>TML Parking</h1><p>Gestion des remorques</p></div>
     </div>
-
+    <a id="back-dashboard" href="/parking-tml/dashboard.html" style="display:none;background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:7px 12px;border-radius:var(--radius-sm);font-size:12px;text-decoration:none;white-space:nowrap;flex-shrink:0">← Dashboard</a>
   </div>
 
   <div id="screen-spot" class="screen active">
@@ -340,6 +340,11 @@ function showScreen(id) {
 }
 
 init();
+
+// Afficher bouton retour dashboard si on vient du dashboard
+if (new URLSearchParams(window.location.search).get('from') === 'dashboard') {
+  document.getElementById('back-dashboard').style.display = 'block';
+}
 
 // Auto-refresh état parking toutes les 30 secondes — lectures CSV illimitées
 setInterval(() => {
