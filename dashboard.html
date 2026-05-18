@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TML Parking — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0F0F13;--surface:#1A1A22;--surface2:#22222E;--border:#2E2E3E;--accent:#7B6EF6;--green:#22C55E;--green-bg:#0D2818;--amber:#F59E0B;--amber-bg:#281A05;--red:#EF4444;--red-bg:#2A0D0D;--blue:#60A5FA;--blue-bg:#0D1B2A;--text:#F0F0F8;--text2:#9090A8;--text3:#5A5A70;--radius:14px;--radius-sm:8px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100vh;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text)}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+  .topbar-left{display:flex;align-items:center;gap:12px}
+  .topbar-icon{width:36px;height:36px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px}
+  .topbar h1{font-size:15px;font-weight:600}
+  .topbar p{font-size:11px;color:var(--text2);margin-top:1px}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .refresh-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:7px 14px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .content{padding:24px;max-width:1200px;margin:0 auto}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+  @media(max-width:700px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr)}
+    .content{padding:12px}
+    .topbar{padding:10px 14px}
+    .topbar h1{font-size:13px}
+    .kpi{padding:12px 14px}
+    .kpi-num{font-size:28px}
+    .filters{gap:6px;margin-bottom:12px}
+    .filter-btn{padding:5px 11px;font-size:12px}
+    .table-wrap{border-radius:10px;overflow-x:auto}
+    table{min-width:600px}
+    th,td{padding:9px 10px;font-size:12px}
+    .badge{font-size:11px;padding:3px 8px}
+    .dept{font-size:11px}
+    .table-header{padding:10px 14px}
+    .table-header h2{font-size:13px}
+    .kpi-label{font-size:10px}
+    .refresh-btn{padding:5px 10px;font-size:12px}
+  }
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px}
+  .kpi-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px}
+  .kpi-num{font-family:'DM Mono',monospace;font-size:36px;font-weight:500;line-height:1}
+  .kpi-num.green{color:var(--green)}.kpi-num.blue{color:var(--blue)}.kpi-num.amber{color:var(--amber)}.kpi-num.red{color:var(--red)}
+  .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .filter-btn{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+  .filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+  .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:28px}
+  .table-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .table-header h2{font-size:14px;font-weight:600}
+  table{width:100%;border-collapse:collapse}
+  th{padding:11px 16px;text-align:left;font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--border);background:var(--surface2)}
+  td{padding:12px 16px;font-size:13px;border-bottom:1px solid rgba(46,46,62,.5);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--surface2)}
+  .empl-badge{font-family:'DM Mono',monospace;font-weight:500;color:var(--accent);font-size:15px}
+  .libre-row td{opacity:.35}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500}
+  .badge-libre{background:var(--green-bg);color:var(--green)}
+  .badge-traiter{background:var(--amber-bg);color:var(--amber)}
+  .badge-bloquee{background:var(--red-bg);color:var(--red)}
+  .dept{font-size:12px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);font-family:'DM Mono',monospace}
+  .hist-item{display:flex;align-items:flex-start;gap:12px;padding:12px 20px;border-bottom:1px solid rgba(46,46,62,.5)}
+  .hist-item:last-child{border-bottom:none}
+  .hist-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+  .hist-dot.depot{background:var(--green)}.hist-dot.retrait{background:var(--red)}
+  .hist-body{flex:1}
+  .hist-title{font-size:13px;font-weight:500}
+  .hist-sub{font-size:12px;color:var(--text2);margin-top:2px}
+  .hist-time{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;flex-shrink:0}
+  .empty{padding:40px;text-align:center;color:var(--text3);font-size:13px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-icon">🚛</div>
+    <div>
+      <h1>TML Parking — Dashboard</h1>
+      <p><span class="live-dot"></span><span id="last-update">Connexion en cours…</span></p>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button id="install-btn" style="display:none;background:var(--accent);border:none;color:#fff;padding:7px 14px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">📲 Installer</button>
+    <button class="refresh-btn" onclick="loadData()">↻ Actualiser</button>
+  </div>
+</div>
+
+<div class="content">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Emplacements libres</div><div class="kpi-num green" id="kpi-libre">—</div></div>
+    <div class="kpi"><div class="kpi-label">Emplacements occupés</div><div class="kpi-num amber" id="kpi-occupe">—</div></div>
+    <div class="kpi"><div class="kpi-label">Bloquées</div><div class="kpi-num red" id="kpi-bloquee">—</div></div>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter('all',this)">Tous</button>
+    <button class="filter-btn" onclick="setFilter('libre',this)">Libre</button>
+    <button class="filter-btn" onclick="setFilter('occupe',this)">Occupés</button>
+    <button class="filter-btn" onclick="setFilter('Aldi',this)">Aldi</button>
+    <button class="filter-btn" onclick="setFilter('Nike',this)">Nike</button>
+    <button class="filter-btn" onclick="setFilter('Chaussea',this)">Chaussea</button>
+    <button class="filter-btn" onclick="setFilter('Crossdock',this)">Crossdock</button>
+    <button class="filter-btn" onclick="setFilter('NCG',this)">NCG</button>
+    <button class="filter-btn" onclick="setFilter('Bureau',this)">Bureau</button>
+    <button class="filter-btn" onclick="setFilter('Retour',this)">Retour</button>
+    <button class="filter-btn" onclick="setFilter('Fleet',this)">Fleet</button>
+    <button class="filter-btn" onclick="setFilter('Autre',this)">Autre</button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header"><h2>État du parking — 25 emplacements</h2></div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Empl.</th><th>Département</th><th>Remorque / Plaque</th>
+            <th>N° voyage</th><th>Date dépôt</th><th>Heure</th>
+            <th>Statut</th><th>Commentaire</th>
+          </tr>
+        </thead>
+        <tbody id="parking-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header"><h2>Historique des mouvements</h2></div>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwLbD-iQ0Vt2shPlKpOXwgjn1Et7oPPW4ZygmNq3RJlPOlzpC2La8RkLcySzNYy3s4PzA/exec";
+
+let allRows = [];
+let currentFilter = 'all';
+
+async function loadData() {
+  try {
+    // Lecture via CSV — illimitée, sans quota
+    const res = await fetch("https://docs.google.com/spreadsheets/d/1I3kIkRRl17lhSNrrZq0eUL51gJlWhdJTWsPB6NRI5QM/export?format=csv&gid=0&t=" + Date.now());
+    const csv = await res.text();
+    const lines = csv.trim().split('\n');
+    const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g,'').trim());
+    allRows = lines.slice(1).map(line => {
+      const cols = line.split(',').map(c => c.replace(/^"|"$/g,'').trim());
+      const obj = {};
+      headers.forEach((h,i) => obj[h] = cols[i] || '');
+      return obj;
+    }).filter(r => r.action);
+    render();
+    document.getElementById('last-update').textContent = 'Mis à jour à ' + new Date().toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  } catch(e) {
+    document.getElementById('last-update').textContent = 'Erreur de connexion — nouvelle tentative…';
+  }
+}
+
+function buildParkingState(rows) {
+  const state = {};
+  // Rejouer tous les mouvements dans l'ordre pour reconstituer l'état actuel
+  rows.forEach(r => {
+    const n = Number(r.emplacement);
+    if (!n) return;
+    if (r.action === 'depot') {
+      state[n] = r;
+    } else if (r.action === 'retrait') {
+      delete state[n];
+    }
+  });
+  return state;
+}
+
+function formatDate(val) {
+  if (!val || val === '') return '—';
+  const s = String(val);
+  // Format ISO 2026-05-14T22:00:00.000Z → ajouter 1 jour car Google décale
+  if (s.includes('T')) {
+    const d = new Date(s);
+    d.setDate(d.getDate() + 1);
+    return d.toLocaleDateString('fr-BE', {day:'2-digit', month:'2-digit', year:'numeric'});
+  }
+  return s;
+}
+
+function formatTime(val) {
+  if (!val || val === '') return '—';
+  const s = String(val);
+  // Format ISO bizarre 1899-12-30T11:26:00.000Z → extraire juste l'heure
+  if (s.includes('T')) {
+    const d = new Date(s);
+    return d.toLocaleTimeString('fr-BE', {hour:'2-digit', minute:'2-digit'});
+  }
+  return s;
+}
+
+function render() {
+  const state   = buildParkingState(allRows);
+  const occupied = Object.values(state);
+  const libre    = 25 - occupied.length;
+  const bloquee  = occupied.filter(r => r.statut === 'Bloquée').length;
+
+  document.getElementById('kpi-libre').textContent   = libre;
+  document.getElementById('kpi-occupe').textContent  = occupied.length;
+  document.getElementById('kpi-bloquee').textContent = bloquee;
+
+  // Tableau parking
+  const tbody = document.getElementById('parking-tbody');
+  let rows = '';
+  for (let i = 1; i <= 25; i++) {
+    const d = state[i];
+    if (currentFilter === 'occupe' && !d) continue;
+    if (currentFilter === 'libre' && d) continue;
+    if (currentFilter !== 'all' && currentFilter !== 'occupe' && currentFilter !== 'libre' && (!d || d.departement !== currentFilter)) continue;
+
+    if (d) {
+      const bc = d.statut === 'Bloquée' ? 'badge-bloquee' : 'badge-traiter';
+      rows += `<tr>
+        <td><span class="empl-badge">${i}</span></td>
+        <td><span class="dept">${d.departement||'—'}</span></td>
+        <td style="font-family:'DM Mono',monospace;font-weight:500">${d.remorque||'—'}</td>
+        <td style="color:var(--text2)">${d.voyage||'—'}</td>
+        <td style="color:var(--text2)">${(() => {
+          const dateStr = formatDate(d.date);
+          // Vérifier si la date dépasse 15 jours
+          try {
+            const parts = d.date.replace(/'/g,'').split('/');
+            if (parts.length === 3) {
+              const depotDate = new Date(parts[2], parts[1]-1, parts[0]);
+              const diffDays = Math.floor((new Date() - depotDate) / (1000*60*60*24));
+              if (diffDays > 15) return '<span style="color:#EF4444;font-weight:700">⚠️ ' + dateStr + '</span>';
+            }
+          } catch(e) {}
+          return dateStr;
+        })()}</td>
+        <td style="color:var(--text2)">${formatTime(d.heure)}</td>
+        <td><span class="badge ${bc}">${d.statut||'—'}</span></td>
+        <td style="color:var(--text2);font-size:12px">${d.commentaire||'—'}</td>
+      </tr>`;
+    } else {
+      rows += `<tr class="libre-row">
+        <td><span class="empl-badge">${i}</span></td>
+        <td colspan="7"><span class="badge badge-libre">Libre</span></td>
+      </tr>`;
+    }
+  }
+  tbody.innerHTML = rows;
+
+  // Historique — toutes les lignes dans l'ordre inverse
+  const histEl = document.getElementById('history-list');
+  const hist   = [...allRows].reverse().filter(r => r.action === 'depot' || r.action === 'retrait');
+  if (!hist.length) { histEl.innerHTML = '<div class="empty">Aucun mouvement enregistré</div>'; return; }
+  histEl.innerHTML = hist.slice(0,30).map(h => `
+    <div class="hist-item">
+      <div class="hist-dot ${h.action === 'depot' ? 'depot' : 'retrait'}"></div>
+      <div class="hist-body">
+        <div class="hist-title">${h.remorque||'—'} — Empl. ${h.emplacement} <span class="dept">${h.departement||''}</span></div>
+        <div class="hist-sub">${h.action === 'depot' ? 'Dépôt' : 'Retrait'}${h.voyage ? ' · ' + h.voyage : ''}${h.commentaire ? ' · ' + h.commentaire : ''}</div>
+      </div>
+      <div class="hist-time">${formatDate(h.date)}<br>${formatTime(h.heure)}</div>
+    </div>`).join('');
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+// Chargement initial + refresh toutes les 10 secondes
+loadData();
+setInterval(loadData, 3000);
+</script>
+<script>
+// PWA - Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// Install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-btn').style.display = 'block';
+});
+document.getElementById('install-btn').addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    document.getElementById('install-btn').style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>
