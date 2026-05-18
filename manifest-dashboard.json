@@ -1,0 +1,24 @@
+{
+  "name": "TML Parking — Dashboard",
+  "short_name": "TML Dashboard",
+  "description": "Vue temps réel du parking remorques TML",
+  "start_url": "/parking-tml/dashboard.html",
+  "scope": "/parking-tml/",
+  "display": "standalone",
+  "background_color": "#0F0F13",
+  "theme_color": "#1A1A2E",
+  "icons": [
+    {
+      "src": "/parking-tml/icon-dashboard-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/parking-tml/icon-dashboard-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
