@@ -54,13 +54,27 @@
 </style>
 </head>
 <body>
+<!-- Bannière installation PWA -->
+<div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1A1A2E;border-top:1px solid #7B6EF6;padding:12px 16px;z-index:999;align-items:center;justify-content:space-between;gap:10px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span style="font-size:24px">🚛</span>
+    <div>
+      <div style="color:#fff;font-size:13px;font-weight:600">Installer TML Parking</div>
+      <div id="install-instructions" style="color:#9090A8;font-size:11px"></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button onclick="document.getElementById('install-banner').style.display='none';localStorage.setItem('install-dismissed','1')" style="background:transparent;border:1px solid #3E3E5E;color:#9090A8;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer">Plus tard</button>
+    <button id="install-action-btn" style="background:#7B6EF6;border:none;color:#fff;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600">Installer</button>
+  </div>
+</div>
 <div class="app">
   <div class="header">
     <div style="display:flex;align-items:center;gap:10px">
       <div class="header-icon">🚛</div>
       <div><h1>TML Parking</h1><p>Gestion des remorques</p></div>
     </div>
-    <button id="install-btn" style="display:none;background:var(--accent);border:none;color:#fff;padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;align-items:center;gap:6px">📲 Installer</button>
+    <button id="install-btn" onclick="handleInstall()" style="background:var(--accent);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;white-space:nowrap">📲 Installer l'app</button>
   </div>
 
   <div id="screen-spot" class="screen active">
@@ -343,20 +357,32 @@ setInterval(() => {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
+
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 let deferredPrompt;
+
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  document.getElementById('install-btn').style.display = 'flex';
 });
-document.getElementById('install-btn').addEventListener('click', async () => {
+
+function handleInstall() {
+  if (isStandalone) {
+    alert("✅ L'application est déjà installée !");
+    return;
+  }
+  if (isIOS) {
+    alert("📲 Installation sur iPhone / iPad :\n\n1. Appuyez sur le bouton Partager ⬆️ en bas de Safari\n2. Faites défiler et appuyez sur \'Sur l\'écran d\'accueil\'\n3. Appuyez sur \'Ajouter\'\n\nL\'app apparaîtra sur votre écran d\'accueil !");
+    return;
+  }
   if (deferredPrompt) {
     deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    document.getElementById('install-btn').style.display = 'none';
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+    return;
   }
-});
+  alert("📲 Installation sur Android :\n\n1. Appuyez sur le menu ⋮ en haut à droite de Chrome\n2. Appuyez sur \'Ajouter à l\'écran d\'accueil\'\n3. Confirmez en appuyant sur \'Ajouter\'\n\nL\'app apparaîtra sur votre écran d\'accueil !");
+}
 </script>
 </body>
 </html>
