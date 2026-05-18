@@ -102,8 +102,7 @@
     </div>
   </div>
   <div style="display:flex;gap:8px;align-items:center">
-    <button onclick="handleInstall()" style="background:var(--accent);border:none;color:#fff;padding:7px 14px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">📲 Installer</button>
-    <button class="refresh-btn" onclick="loadData()">↻ Actualiser</button>
+<button class="refresh-btn" onclick="loadData()">↻ Actualiser</button>
   </div>
 </div>
 
@@ -300,29 +299,8 @@ if ('serviceWorker' in navigator) {
 
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-let deferredPrompt;
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-});
 
-function handleInstall() {
-  if (isStandalone) {
-    alert("✅ L'application est déjà installée !");
-    return;
-  }
-  if (isIOS) {
-    alert("📲 Installation sur iPhone / iPad :\n\n1. Appuyez sur le bouton Partager ⬆️ en bas de Safari\n2. Faites défiler et appuyez sur \'Sur l\'écran d\'accueil\'\n3. Appuyez sur \'Ajouter\'");
-    return;
-  }
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-    return;
-  }
-  alert("📲 Installation sur Android :\n\n1. Appuyez sur le menu ⋮ en haut à droite de Chrome\n2. Appuyez sur \'Ajouter à l\'écran d\'accueil\'\n3. Confirmez en appuyant sur \'Ajouter\'");
-}
 
 setInterval(loadData, 1000);
 </script>
