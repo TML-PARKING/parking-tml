@@ -27,7 +27,17 @@
   .refresh-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:7px 14px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif}
   .content{padding:24px;max-width:1200px;margin:0 auto}
   .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+  .mobile-card{display:none}
+  .m-card{display:flex;flex-direction:column;gap:6px;padding:10px 14px;background:var(--surface2);border-radius:var(--radius-sm);margin:4px 0}
+  .m-card-libre{flex-direction:row;align-items:center;gap:10px}
+  .m-card-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .m-card-bot{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   @media(max-width:700px){
+    .desktop-row{display:none}
+    .mobile-card{display:table-row}
+    thead{display:none}
+    .table-wrap{overflow-x:hidden}
+    table{min-width:unset}
     .kpi-grid{grid-template-columns:repeat(2,1fr)}
     .content{padding:12px}
     .topbar{padding:10px 14px}
@@ -235,32 +245,59 @@ function render() {
 
     if (d) {
       const bc = d.statut === 'Bloquée' ? 'badge-bloquee' : 'badge-traiter';
-      rows += `<tr>
+      const dateStr = (() => {
+        const ds = formatDate(d.date);
+        try {
+          const parts = d.date.replace(/'/g,'').split('/');
+          if (parts.length === 3) {
+            const depotDate = new Date(parts[2], parts[1]-1, parts[0]);
+            const diffDays = Math.floor((new Date() - depotDate) / (1000*60*60*24));
+            if (diffDays > 15) return '<span style="color:#EF4444;font-weight:700">⚠️ ' + ds + '</span>';
+          }
+        } catch(e) {}
+        return ds;
+      })();
+      // Desktop row
+      rows += `<tr class="desktop-row">
         <td><span class="empl-badge">${i}</span></td>
         <td><span class="dept">${d.departement||'—'}</span></td>
         <td style="font-family:'DM Mono',monospace;font-weight:500">${d.remorque||'—'}</td>
         <td style="color:var(--text2)">${d.voyage||'—'}</td>
-        <td style="color:var(--text2)">${(() => {
-          const dateStr = formatDate(d.date);
-          // Vérifier si la date dépasse 15 jours
-          try {
-            const parts = d.date.replace(/'/g,'').split('/');
-            if (parts.length === 3) {
-              const depotDate = new Date(parts[2], parts[1]-1, parts[0]);
-              const diffDays = Math.floor((new Date() - depotDate) / (1000*60*60*24));
-              if (diffDays > 15) return '<span style="color:#EF4444;font-weight:700">⚠️ ' + dateStr + '</span>';
-            }
-          } catch(e) {}
-          return dateStr;
-        })()}</td>
+        <td style="color:var(--text2)">${dateStr}</td>
         <td style="color:var(--text2)">${formatTime(d.heure)}</td>
         <td><span class="badge ${bc}">${d.statut||'—'}</span></td>
         <td style="color:var(--text2);font-size:12px">${d.commentaire||'—'}</td>
       </tr>`;
+      // Mobile card
+      rows += `<tr class="mobile-card">
+        <td colspan="8">
+          <div class="m-card">
+            <div class="m-card-top">
+              <span class="empl-badge">${i}</span>
+              <span class="dept">${d.departement||'—'}</span>
+              <span style="font-family:'DM Mono',monospace;font-weight:600;color:var(--text)">${d.remorque||'—'}</span>
+              <span class="badge ${bc}">${d.statut||'—'}</span>
+            </div>
+            <div class="m-card-bot">
+              <span style="color:var(--text2);font-size:11px">${dateStr} ${formatTime(d.heure)}</span>
+              ${d.voyage && d.voyage !== '—' ? `<span style="color:var(--text2);font-size:11px">· V: ${d.voyage}</span>` : ''}
+              ${d.commentaire && d.commentaire !== '—' ? `<span style="color:var(--text2);font-size:11px">· ${d.commentaire}</span>` : ''}
+            </div>
+          </div>
+        </td>
+      </tr>`;
     } else {
-      rows += `<tr class="libre-row">
+      rows += `<tr class="libre-row desktop-row">
         <td><span class="empl-badge">${i}</span></td>
         <td colspan="7"><span class="badge badge-libre">Libre</span></td>
+      </tr>`;
+      rows += `<tr class="mobile-card">
+        <td colspan="8">
+          <div class="m-card m-card-libre">
+            <span class="empl-badge">${i}</span>
+            <span class="badge badge-libre">Libre</span>
+          </div>
+        </td>
       </tr>`;
     }
   }
